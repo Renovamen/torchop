@@ -10,7 +10,7 @@ class ScaledDotProductAttention(nn.Module):
     Parameters
     ----------
     scale : float
-        Scale factor (``sqrt(d_k)``)
+        Scale factor (``sqrt(dim_head)``)
 
     dropout : float, optional
         Dropout, ``None`` if no dropout layer
@@ -32,7 +32,7 @@ class ScaledDotProductAttention(nn.Module):
         """
         Parameters
         ----------
-        Q : torch.Tensor (batch_size, n_heads, length, d_k)
+        Q : torch.Tensor (batch_size, n_heads, length, dim_head)
             Query
 
         K : torch.Tensor
@@ -46,23 +46,23 @@ class ScaledDotProductAttention(nn.Module):
 
         Returns
         -------
-        context : torch.Tensor (batch_size, n_heads, length, d_k)
+        context : torch.Tensor (batch_size, n_heads, length, dim_head)
             Context vector
 
         att : torch.Tensor (batch_size, n_heads, length, length)
             Attention weights
         """
-        # Q·K^T / sqrt(d_k)
+        # Q·K^T / sqrt(dim_head)
         score = torch.matmul(Q / self.scale, K.transpose(2, 3))  # (batch_size, n_heads, length, length)
 
         # mask away by setting such weights to a large negative number, so that they evaluate to 0 under the softmax
         if mask is not None:
             score = score.masked_fill(mask.bool(), -np.inf)
 
-        # eq.1: Attention(Q, K, V) = softmax(Q·K^T / sqrt(d_k))·V
+        # eq.1: Attention(Q, K, V) = softmax(Q·K^T / sqrt(dim_head))·V
         att = self.softmax(score)  # (batch_size, n_heads, length, length)
         att = att if self.dropout is None else self.dropout(att)
-        context = att @ V  # (batch_size, n_heads, length, d_k)
+        context = att @ V  # (batch_size, n_heads, length, dim_head)
 
         return context, att
 
@@ -84,8 +84,8 @@ class SelfAttention(nn.Module):
 
     References
     ----------
-    1. "`Neural Machine Translation by Jointly Learning to Align and Translate. \
-            <https://arxiv.org/abs/1409.0473>`_" Dzmitry Bahdanau, et al. ICLR 2015.
+    1. "`Attention Is All You Need. <https://arxiv.org/abs/1706.03762>`_" \
+            Ashish Vaswani, et al. NIPS 2017.
     """
     def __init__(
         self, input_size: int, n_heads: int, dropout: Optional[float] = None
@@ -94,21 +94,20 @@ class SelfAttention(nn.Module):
 
         assert input_size % n_heads == 0
 
-        # we assume d_v always equals d_k
-        self.d_k = input_size // n_heads  # d_k: size of each head
+        self.dim_head = input_size // n_heads
         self.n_heads = n_heads
 
         # linear projections
-        self.W_Q = nn.Linear(input_size, n_heads * self.d_k)
-        self.W_K = nn.Linear(input_size, n_heads * self.d_k)
-        self.W_V = nn.Linear(input_size, n_heads * self.d_k)
+        self.W_Q = nn.Linear(input_size, n_heads * self.dim_head)
+        self.W_K = nn.Linear(input_size, n_heads * self.dim_head)
+        self.W_V = nn.Linear(input_size, n_heads * self.dim_head)
 
         # scaled dot-product attention
-        scale = self.d_k ** 0.5  # scale factor
+        scale = self.dim_head ** 0.5  # scale factor
         self.attention = ScaledDotProductAttention(scale=scale, dropout=dropout)
 
         self.layer_norm = nn.LayerNorm(input_size)
-        self.fc = nn.Linear(n_heads * self.d_k, input_size)
+        self.fc = nn.Linear(n_heads * self.dim_head, input_size)
 
         self.dropout = None if dropout is None else nn.Dropout(dropout)
 
@@ -134,23 +133,23 @@ class SelfAttention(nn.Module):
         """
         batch_size = x.size(0)
 
-        Q = self.W_Q(x)  # (batch_size, length, n_heads * d_k)
+        Q = self.W_Q(x)  # (batch_size, length, n_heads * dim_head)
         K = self.W_K(x)
         V = self.W_V(x)
 
-        Q = Q.view(batch_size, -1, self.n_heads, self.d_k)  # (batch_size, length, n_heads, d_k)
-        K = K.view(batch_size, -1, self.n_heads, self.d_k)
-        V = V.view(batch_size, -1, self.n_heads, self.d_k)
+        Q = Q.view(batch_size, -1, self.n_heads, self.dim_head)  # (batch_size, length, n_heads, dim_head)
+        K = K.view(batch_size, -1, self.n_heads, self.dim_head)
+        V = V.view(batch_size, -1, self.n_heads, self.dim_head)
 
-        Q, K, V = Q.transpose(1, 2), K.transpose(1, 2), V.transpose(1, 2)  # (batch_size, n_heads, length, d_k)
+        Q, K, V = Q.transpose(1, 2), K.transpose(1, 2), V.transpose(1, 2)  # (batch_size, n_heads, length, dim_head)
 
         # for n_heads axis broadcasting
         if mask is not None:
-            mask = mask.unsqueeze(1)  # (batch_size, 1, 1, d_k)
+            mask = mask.unsqueeze(1)  # (batch_size, 1, 1, dim_head)
 
-        context, att = self.attention(Q, K, V, mask=mask)  # (batch_size, n_heads, length, d_k)
+        context, att = self.attention(Q, K, V, mask=mask)  # (batch_size, n_heads, length, dim_head)
 
-        context = context.transpose(1, 2).contiguous().view(batch_size, -1, self.d_k * self.n_heads)  # (batch_size, length, n_heads * d_k)
+        context = context.transpose(1, 2).contiguous().view(batch_size, -1, self.dim_head * self.n_heads)  # (batch_size, length, n_heads * dim_head)
 
         out = self.fc(context)  # (batch_size, length, input_size)
         out = out if self.dropout is None else self.dropout(out)

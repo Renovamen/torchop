@@ -10,7 +10,7 @@ with open(ver_file) as fp:
 
 def readme():
     readme_path = path.join(current_path, 'README.md')
-    with open(readme_path, encoding = 'utf-8') as fp:
+    with open(readme_path, encoding='utf-8') as fp:
         return fp.read()
 
 setup(
