@@ -1,4 +1,5 @@
 from typing import Optional
+import numpy as np
 import torch
 from torch import nn
 
@@ -67,6 +68,9 @@ class VanillaAttention(nn.Module):
         -------
         out : torch.Tensor (batch_size, input_size)
             Output tensor
+
+        att: torch.Tensor (batch_size, length)
+            Attention weights
         """
 
         # alignment scores
@@ -75,18 +79,16 @@ class VanillaAttention(nn.Module):
 
         # mask alignment scores
         if mask is not None:
-            score.masked_fill_(mask.bool(), -float('inf'))
+            score = score.masked_fill(mask.bool(), -np.inf)
 
         # attention weights
-        attention = self.softmax(score)  # (batch_size, length)
-        if self.dropout is not None:
-            attention = self.dropout(attention)
-        attention = attention.unsqueeze(1)  # (batch_size, 1, length)
+        att = self.softmax(score)  # (batch_size, length)
+        att = att if self.dropout is None else self.dropout(att)
 
         # context vector (weighted value)
-        context = (attention @ value).squeeze(1)  # (batch_size, input_size)
+        context = (att.unsqueeze(1) @ value).squeeze(1)  # (batch_size, input_size)
 
         # attention result
         out = self.tanh(self.fc_value(context) + self.fc_query(query))
 
-        return out
+        return out, att
