@@ -10,10 +10,10 @@ class ScaledDotProductAttention(nn.Module):
     Parameters
     ----------
     scale : float
-        Scale factor (``sqrt(dim_head)``)
+        Scale factor (``sqrt(dim_head)``).
 
     dropout : float, optional
-        Dropout, ``None`` if no dropout layer
+        Dropout, ``None`` if no dropout layer.
     """
     def __init__(self, scale: float, dropout: float = 0.5) -> None:
         super(ScaledDotProductAttention, self).__init__()
@@ -67,20 +67,20 @@ class ScaledDotProductAttention(nn.Module):
         return context, att
 
 
-class SelfAttention(nn.Module):
+class MultiHeadSelfAttention(nn.Module):
     """
     Implementation of Multi-Head Self-Attention proposed in [1].
 
     Parameters
     ----------
     input_size : int
-        Size of the input tensor
+        Dimension of the input text embeddings.
 
     n_heads : int
-        Number of attention heads
+        Number of attention heads.
 
     dropout : float, optional
-        Dropout, ``None`` if no dropout layer
+        Dropout, ``None`` if no dropout layer.
 
     References
     ----------
@@ -90,7 +90,7 @@ class SelfAttention(nn.Module):
     def __init__(
         self, input_size: int, n_heads: int, dropout: Optional[float] = None
     ) -> None:
-        super(SelfAttention, self).__init__()
+        super(MultiHeadSelfAttention, self).__init__()
 
         assert input_size % n_heads == 0
 
@@ -118,18 +118,19 @@ class SelfAttention(nn.Module):
         Parameters
         ----------
         x : torch.Tensor (batch_size, length, input_size)
-            Input data
+            Input data, where ``length`` is the max length of the input sentences, ``input_size`` is
+            the dimension of the text embeddings.
 
         mask : torch.Tensor, optional (batch_size, 1, length)
-            Mask metrix, None if it is not needed
+            Mask metrix, ``None`` if it is not needed.
 
         Returns
         -------
         out : torch.Tensor (batch_size, length, input_size)
-            Output of multi-head self-attention network
+            Output of multi-head self-attention network.
 
         att: torch.Tensor (batch_size, n_heads, length, length)
-            Attention weights
+            Attention weights.
         """
         batch_size = x.size(0)
 
