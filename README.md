@@ -39,3 +39,7 @@ pip install git+https://github.com/Renovamen/torchattn.git --upgrade
 - Simple Self-Attention
 
   [Self-Attention Generative Adversarial Networks.](https://arxiv.org/abs/1805.08318) ICML 2019.
+
+- External Attention
+
+  [Beyond Self-attention: External Attention using Two Linear Layers for Visual Tasks.](https://arxiv.org/abs/2105.02358) arXiv 2021.

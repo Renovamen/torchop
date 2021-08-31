@@ -43,5 +43,10 @@ class TestAttention(unittest.TestCase):
         out, _ = attention(INPUT)
         check_self_attention_size(out)
 
+    def test_external_attention(self):
+        attention = torchattn.ExternalAttention(INPUT_SIZE)
+        out, _ = attention(INPUT)
+        check_self_attention_size(out)
+
 if __name__ == '__main__':
     unittest.main()
