@@ -74,7 +74,7 @@ class SelfAttention(nn.Module):
     Parameters
     ----------
     input_size : int
-        Dimension of the input text embeddings.
+        Dimension of the input features.
 
     n_heads : int
         Number of attention heads.
@@ -128,8 +128,8 @@ class SelfAttention(nn.Module):
         Parameters
         ----------
         x : torch.Tensor (batch_size, length, input_size)
-            Input data, where ``length`` is the max length of the input sentences, ``input_size`` is
-            the dimension of the text embeddings.
+            Input data, where ``length`` is the length (number of features) of the input and
+            ``input_size`` is the dimension of the features.
 
         mask : torch.Tensor, optional (batch_size, 1, length)
             Mask metrix, ``None`` if it is not needed.
@@ -183,7 +183,7 @@ class SimplifiedSelfAttention(SelfAttention):
     Parameters
     ----------
     input_size : int
-        Dimension of the input text embeddings.
+        Dimension of the input features.
 
     n_heads : int
         Number of attention heads.

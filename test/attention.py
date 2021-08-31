@@ -8,12 +8,16 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import torchattn
 
 BATCH_SIZE = 128
-LENGTH = 50
+LENGTH = 196
 INPUT_SIZE = 512
-IN_CHANNELS = 32
-IMAGE_W = 14
-IMAGE_H = 14
 N_HEADS = 8
+
+INPUT = torch.randn(BATCH_SIZE, LENGTH, INPUT_SIZE)
+
+
+def check_self_attention_size(x):
+    assert x.size() == torch.Size([BATCH_SIZE, LENGTH, INPUT_SIZE])
+
 
 class TestAttention(unittest.TestCase):
     def test_vanilla(self):
@@ -26,21 +30,18 @@ class TestAttention(unittest.TestCase):
             assert out.size() == torch.Size([BATCH_SIZE, INPUT_SIZE])
 
     def test_multi_head_self_attention(self):
-        x = torch.randn(BATCH_SIZE, LENGTH, INPUT_SIZE)
-
         attention = torchattn.SelfAttention(INPUT_SIZE, N_HEADS)
-        out, _ = attention(x)
-        assert out.size() == torch.Size([BATCH_SIZE, LENGTH, INPUT_SIZE])
+        out, _ = attention(INPUT)
+        check_self_attention_size(out)
 
         attention = torchattn.SimplifiedSelfAttention(INPUT_SIZE, N_HEADS)
-        out, _ = attention(x)
-        assert out.size() == torch.Size([BATCH_SIZE, LENGTH, INPUT_SIZE])
+        out, _ = attention(INPUT)
+        check_self_attention_size(out)
 
     def test_simple_self_attention(self):
-        x = torch.randn(BATCH_SIZE, IN_CHANNELS, IMAGE_W, IMAGE_H)
-        attention = torchattn.SimpleSelfAttention(IN_CHANNELS)
-        out, _ = attention(x)
-        assert out.size() == torch.Size([BATCH_SIZE, IN_CHANNELS, IMAGE_W, IMAGE_H])
+        attention = torchattn.SimpleSelfAttention(INPUT_SIZE)
+        out, _ = attention(INPUT)
+        check_self_attention_size(out)
 
 if __name__ == '__main__':
     unittest.main()

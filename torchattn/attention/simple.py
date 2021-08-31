@@ -8,8 +8,8 @@ class SimpleSelfAttention(nn.Module):
 
     Parameters
     ----------
-    in_channels : int
-        Number of channels of the input tensor.
+    input_size : int
+        Dimension of the input features.
 
     refuce_factor : int, optional, default=8
         Factor to reduce the channel number.
@@ -24,15 +24,15 @@ class SimpleSelfAttention(nn.Module):
     """
 
     def __init__(
-        self, in_channels: int, refuce_factor: int = 8, dropout: Optional[float] = None
+        self, input_size: int, refuce_factor: int = 8, dropout: Optional[float] = None
     ) -> None:
         super(SimpleSelfAttention, self).__init__()
 
-        out_channels = in_channels // refuce_factor
+        out_size = input_size // refuce_factor
 
-        self.W_Q = nn.Conv1d(in_channels, out_channels, kernel_size=1)
-        self.W_K = nn.Conv1d(in_channels, out_channels, kernel_size=1)
-        self.W_V = nn.Conv1d(in_channels, in_channels, kernel_size=1)
+        self.W_Q = nn.Conv1d(input_size, out_size, kernel_size=1)
+        self.W_K = nn.Conv1d(input_size, out_size, kernel_size=1)
+        self.W_V = nn.Conv1d(input_size, input_size, kernel_size=1)
 
         self.softmax = nn.Softmax(dim=-1)
         self.gamma = nn.Parameter(torch.tensor(0.0))
@@ -43,31 +43,30 @@ class SimpleSelfAttention(nn.Module):
         """
         Parameters
         ----------
-        x : torch.Tensor (batch_size, in_channels, width, height)
-            Input data
+        x : torch.Tensor (batch_size, length, input_size)
+            Input data, where ``length`` is the length (number of features) of the input and
+            ``input_size`` is the dimension of the features.
 
         Returns
         -------
-        out : torch.Tensor (batch_size, in_channels, width, height)
+        out : torch.Tensor (batch_size, length, input_size)
             Output of simple self-attention network
 
-        att: torch.Tensor (batch_size, width * height, width * height)
+        att: torch.Tensor (batch_size, length, length)
             Attention weights
         """
-        batch_size, in_channels, width, height = x.size()
-        flat_x = x.view(batch_size, in_channels, width * height)  # (batch_size, in_channels, width * height)
+        x = x.transpose(1, 2)  # (batch_size, input_size, length)
 
-        Q = self.W_Q(flat_x).permute(0, 2, 1)  # (batch_size, width * height, out_channels)
-        K = self.W_K(flat_x)  # (batch_size, out_channels, width * height)
-        V = self.W_V(flat_x)  # (batch_size, in_channels, width * height)
+        Q = self.W_Q(x).transpose(1, 2)  # (batch_size, length, out_size)
+        K = self.W_K(x)  # (batch_size, out_size, length)
+        V = self.W_V(x)  # (batch_size, input_size, length)
 
-        score = Q @ K
-        att = self.softmax(score)  # (batch_size, width * height, width * height)
-        context = V @ att.permute(0, 2, 1)  # (batch_size, out_channels, width * height)
+        score = Q @ K  # (batch_size, length, length)
+        att = self.softmax(score)  # (batch_size, length, length)
+        att = att if self.dropout is None else self.dropout(att)
 
-        out = context.view(batch_size, in_channels, width, height)
-        out = out if self.dropout is None else self.dropout(out)
-
+        out = V @ att.transpose(1, 2)  # (batch_size, input_size, length)
         out = self.gamma * out + x  # residual connection
+        out = out.transpose(1, 2)  # (batch_size, length, input_size)
 
         return out, att
