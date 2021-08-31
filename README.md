@@ -1,6 +1,6 @@
 # torchattn
 
-PyTorch implementation of some attention networks.
+A collection of some attention networks implemented using PyTorch.
 
 **WIP**
 
@@ -32,7 +32,7 @@ pip install git+https://github.com/Renovamen/torchattn.git --upgrade
 
   [Effective Approaches to Attention-based Neural Machine Translation.](https://arxiv.org/abs/1508.04025) EMNLP 2015.
 
-- Multi-Head Self-Attention
+- Self-Attention, Simplified Self-Attention
 
   [Attention Is All You Need.](https://arxiv.org/abs/1706.03762) NIPS 2017.
 

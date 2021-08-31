@@ -67,7 +67,7 @@ class ScaledDotProductAttention(nn.Module):
         return context, att
 
 
-class MultiHeadSelfAttention(nn.Module):
+class SelfAttention(nn.Module):
     """
     Implementation of Multi-Head Self-Attention proposed in [1].
 
@@ -79,6 +79,10 @@ class MultiHeadSelfAttention(nn.Module):
     n_heads : int
         Number of attention heads.
 
+    simplified : bool, optional, default=False
+        Use the simplified version of the Multi-Head Self-Attention or not. See
+        :class:`torchattn.SimplifiedSelfAttention` for details.
+
     dropout : float, optional
         Dropout, ``None`` if no dropout layer.
 
@@ -88,19 +92,25 @@ class MultiHeadSelfAttention(nn.Module):
             Ashish Vaswani, et al. NIPS 2017.
     """
     def __init__(
-        self, input_size: int, n_heads: int, dropout: Optional[float] = None
+        self,
+        input_size: int,
+        n_heads: int,
+        simplified: bool = False,
+        dropout: Optional[float] = None
     ) -> None:
-        super(MultiHeadSelfAttention, self).__init__()
+        super(SelfAttention, self).__init__()
 
         assert input_size % n_heads == 0
 
         self.dim_head = input_size // n_heads
         self.n_heads = n_heads
+        self.simplified = simplified
 
-        # linear projections
-        self.W_Q = nn.Linear(input_size, n_heads * self.dim_head)
-        self.W_K = nn.Linear(input_size, n_heads * self.dim_head)
-        self.W_V = nn.Linear(input_size, n_heads * self.dim_head)
+        if not simplified:
+            # linear projections
+            self.W_Q = nn.Linear(input_size, n_heads * self.dim_head)
+            self.W_K = nn.Linear(input_size, n_heads * self.dim_head)
+            self.W_V = nn.Linear(input_size, n_heads * self.dim_head)
 
         # scaled dot-product attention
         scale = self.dim_head ** 0.5  # scale factor
@@ -134,9 +144,12 @@ class MultiHeadSelfAttention(nn.Module):
         """
         batch_size = x.size(0)
 
-        Q = self.W_Q(x)  # (batch_size, length, n_heads * dim_head)
-        K = self.W_K(x)
-        V = self.W_V(x)
+        if self.simplified:
+            Q = K = V = x
+        else:
+            Q = self.W_Q(x)  # (batch_size, length, n_heads * dim_head)
+            K = self.W_K(x)
+            V = self.W_V(x)
 
         Q = Q.view(batch_size, -1, self.n_heads, self.dim_head)  # (batch_size, length, n_heads, dim_head)
         K = K.view(batch_size, -1, self.n_heads, self.dim_head)
@@ -159,3 +172,31 @@ class MultiHeadSelfAttention(nn.Module):
         out = self.layer_norm(out)  # LayerNorm
 
         return out, att
+
+
+class SimplifiedSelfAttention(SelfAttention):
+    """
+    Implementation of a common simplified version of Multi-Head Self-Attention, which drops the
+    linear projection layers and directly calculates an attention map from the input feature to
+    reduce the computational complexity.
+
+    Parameters
+    ----------
+    input_size : int
+        Dimension of the input text embeddings.
+
+    n_heads : int
+        Number of attention heads.
+
+    dropout : float, optional
+        Dropout, ``None`` if no dropout layer.
+    """
+    def __init__(
+        self, input_size: int, n_heads: int, dropout: Optional[float] = None
+    ) -> None:
+        super(SimplifiedSelfAttention, self).__init__(
+            input_size = input_size,
+            n_heads = n_heads,
+            simplified = True,
+            dropout = dropout
+        )

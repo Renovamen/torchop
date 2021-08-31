@@ -11,7 +11,7 @@ class SimpleSelfAttention(nn.Module):
     in_channels : int
         Number of channels of the input tensor.
 
-    reduce_dim : int, optional, default=8
+    refuce_factor : int, optional, default=8
         Factor to reduce the channel number.
 
     dropout : float, optional
@@ -24,11 +24,11 @@ class SimpleSelfAttention(nn.Module):
     """
 
     def __init__(
-        self, in_channels: int, reduce_dim: int = 8, dropout: Optional[float] = None
+        self, in_channels: int, refuce_factor: int = 8, dropout: Optional[float] = None
     ) -> None:
         super(SimpleSelfAttention, self).__init__()
 
-        out_channels = in_channels // reduce_dim
+        out_channels = in_channels // refuce_factor
 
         self.W_Q = nn.Conv1d(in_channels, out_channels, kernel_size=1)
         self.W_K = nn.Conv1d(in_channels, out_channels, kernel_size=1)
