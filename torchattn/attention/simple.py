@@ -11,7 +11,7 @@ class SimpleSelfAttention(nn.Module):
     input_size : int
         Dimension of the input features.
 
-    refuce_factor : int, optional, default=8
+    reduce_coef : int, optional, default=8
         Factor to reduce the channel number.
 
     dropout : float, optional
@@ -24,11 +24,11 @@ class SimpleSelfAttention(nn.Module):
     """
 
     def __init__(
-        self, input_size: int, refuce_factor: int = 8, dropout: Optional[float] = None
+        self, input_size: int, reduce_coef: int = 8, dropout: Optional[float] = None
     ) -> None:
         super(SimpleSelfAttention, self).__init__()
 
-        out_size = input_size // refuce_factor
+        out_size = input_size // reduce_coef
 
         self.W_Q = nn.Conv1d(input_size, out_size, kernel_size=1)
         self.W_K = nn.Conv1d(input_size, out_size, kernel_size=1)

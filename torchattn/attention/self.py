@@ -102,8 +102,9 @@ class SelfAttention(nn.Module):
 
         assert input_size % n_heads == 0
 
-        self.dim_head = input_size // n_heads
         self.n_heads = n_heads
+        self.dim_head = input_size // n_heads
+
         self.simplified = simplified
 
         if not simplified:

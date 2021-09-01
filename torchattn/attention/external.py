@@ -19,6 +19,9 @@ class ExternalAttention(nn.Module):
     s : int, optional, default=64
         Demension of the memory unit, see the original paper for details.
 
+    n_heads : int, optional, default=1
+        Number of attention heads.
+
     dropout : float, optional
         Dropout, ``None`` if no dropout layer
 
@@ -29,16 +32,25 @@ class ExternalAttention(nn.Module):
     """
 
     def __init__(
-        self, input_size: int, s: int = 64, dropout: Optional[float] = None
+        self,
+        input_size: int,
+        n_heads: Optional[int] = 1,
+        s: int = 64,
+        dropout: Optional[float] = None
     ) -> None:
         super(ExternalAttention, self).__init__()
 
-        self.W_Q = nn.Conv1d(input_size, input_size, kernel_size=1)
-        self.M_K = nn.Conv1d(input_size, s, kernel_size=1, bias=False)  # memory unit
-        self.M_V = nn.Conv1d(s, input_size, kernel_size=1, bias=False)  # memory unit
+        assert input_size % n_heads == 0
+
+        self.n_heads = n_heads
+        self.dim_head = input_size // n_heads
+
+        self.W_Q = nn.Linear(input_size, n_heads * self.dim_head)
+        self.M_K = nn.Linear(self.dim_head, s, bias=False)  # memory unit
+        self.M_V = nn.Linear(s, self.dim_head, bias=False)  # memory unit
         self.M_V.weight.data = self.M_K.weight.data.transpose(0, 1)  # initialization of M_V and M_K should be the same
 
-        self.fc = nn.Conv1d(input_size, input_size, kernel_size=1, bias=False)
+        self.fc = nn.Linear(input_size, input_size, bias=False)
         self.batch_norm = nn.BatchNorm1d(input_size)
 
         self.softmax = nn.Softmax(dim=-1)
@@ -61,20 +73,23 @@ class ExternalAttention(nn.Module):
         att: torch.Tensor (batch_size, length, length)
             Attention weights
         """
-        x = x.transpose(1, 2)  # (batch_size, input_size, length)
+        batch_size = x.size(0)
 
-        Q = self.W_Q(x)  # (batch_size, input_size, length)
+        Q = self.W_Q(x)  # (batch_size, length, n_heads * dim_head)
+        Q = Q.view(batch_size, -1, self.n_heads, self.dim_head)  # (batch_size, length, n_heads, dim_head)
+        Q = Q.transpose(1, 2)  # (batch_size, n_heads, length, dim_head)
 
-        score = self.M_K(Q)  # (batch_size, s, length)
-        att = self.double_norm(score)  # (batch_size, s, length)
+        score = self.M_K(Q)  # (batch_size, n_heads, length, s)
+        att = self.double_norm(score)  # (batch_size, n_heads, length, s)
         att = att if self.dropout is None else self.dropout(att)
 
-        context = self.M_V(att)  # (batch_size, input_size, length)
+        context = self.M_V(att)  # (batch_size, n_heads, length, dim_head)
+        context = context.transpose(1, 2).contiguous().view(batch_size, -1, self.dim_head * self.n_heads)  # (batch_size, length, n_heads * dim_head)
 
-        out = self.fc(context)  # (batch_size, input_size, length)
-        out = self.batch_norm(out)  # BatchNorm
+        out = self.fc(context).transpose(1, 2)  # (batch_size, input_size, length)
+        out = self.batch_norm(out).transpose(1, 2)  # BatchNorm (batch_size, length, input_size)
         out = out + x  # residual connection
-        out = self.relu(out).transpose(1, 2)  # (batch_size, length, input_size)
+        out = self.relu(out)
 
         return out, att
 
