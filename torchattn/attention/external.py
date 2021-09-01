@@ -79,8 +79,8 @@ class ExternalAttention(nn.Module):
         Q = Q.view(batch_size, -1, self.n_heads, self.dim_head)  # (batch_size, length, n_heads, dim_head)
         Q = Q.transpose(1, 2)  # (batch_size, n_heads, length, dim_head)
 
-        score = self.M_K(Q)  # (batch_size, n_heads, length, s)
-        att = self.double_norm(score)  # (batch_size, n_heads, length, s)
+        score = self.M_K(Q).transpose(2, 3)  # (batch_size, n_heads, s, length)
+        att = self.double_norm(score).transpose(2, 3)  # (batch_size, n_heads, length, s)
         att = att if self.dropout is None else self.dropout(att)
 
         context = self.M_V(att)  # (batch_size, n_heads, length, dim_head)
