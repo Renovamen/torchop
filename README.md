@@ -36,7 +36,7 @@ pip install git+https://github.com/Renovamen/torchattn.git --upgrade
 
   [Attention Is All You Need.](https://arxiv.org/abs/1706.03762) NIPS 2017.
 
-- Simple Self-Attention
+- SAGAN Attention
 
   [Self-Attention Generative Adversarial Networks.](https://arxiv.org/abs/1805.08318) ICML 2019.
 

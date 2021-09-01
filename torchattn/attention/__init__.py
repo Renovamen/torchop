@@ -1,12 +1,12 @@
 from .vanilla import VanillaAttention
 from .self import SelfAttention, SimplifiedSelfAttention
-from .simple import SimpleSelfAttention
+from .sagan import SAGANAttention
 from .external import ExternalAttention
 
 __all__ = [
     'VanillaAttention',
     'SelfAttention',
-    'SimpleSelfAttention',
+    'SAGANAttention',
     'SimplifiedSelfAttention',
     'ExternalAttention'
 ]

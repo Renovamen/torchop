@@ -38,8 +38,8 @@ class TestAttention(unittest.TestCase):
         out, _ = attention(INPUT)
         check_self_attention_size(out)
 
-    def test_simple_self_attention(self):
-        attention = torchattn.SimpleSelfAttention(INPUT_SIZE)
+    def test_sagan_attention(self):
+        attention = torchattn.SAGANAttention(INPUT_SIZE)
         out, _ = attention(INPUT)
         check_self_attention_size(out)
 

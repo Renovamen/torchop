@@ -2,9 +2,9 @@ from typing import Tuple, Optional
 import torch
 from torch import nn
 
-class SimpleSelfAttention(nn.Module):
+class SAGANAttention(nn.Module):
     """
-    Implementation of Simple Self-Attention proposed in [1].
+    Implementation of attention layer proposed in [1].
 
     Parameters
     ----------
@@ -26,7 +26,7 @@ class SimpleSelfAttention(nn.Module):
     def __init__(
         self, input_size: int, reduce_coef: int = 8, dropout: Optional[float] = None
     ) -> None:
-        super(SimpleSelfAttention, self).__init__()
+        super(SAGANAttention, self).__init__()
 
         out_size = input_size // reduce_coef
 
