@@ -2,7 +2,7 @@ from typing import Tuple, Optional
 import torch
 from torch import nn
 
-from ..modules import add_mask
+from ..modules import *
 
 class SAGANAttention(nn.Module):
     """
@@ -26,15 +26,25 @@ class SAGANAttention(nn.Module):
     """
 
     def __init__(
-        self, dim: int, reduction: int = 8, dropout: Optional[float] = None
+        self,
+        dim: int,
+        reduction: int = 8,
+        n_heads: int = 1,
+        dropout: Optional[float] = None
     ) -> None:
         super(SAGANAttention, self).__init__()
 
         out_size = dim // reduction
 
-        self.W_Q = nn.Conv1d(dim, out_size, kernel_size=1)
-        self.W_K = nn.Conv1d(dim, out_size, kernel_size=1)
-        self.W_V = nn.Conv1d(dim, dim, kernel_size=1)
+        assert dim % n_heads == 0 and out_size % n_heads == 0
+
+        self.n_heads = n_heads
+        self.d_head = dim // n_heads
+        self.d_out_head = out_size // n_heads
+
+        self.W_Q = nn.Linear(dim, out_size)
+        self.W_K = nn.Linear(dim, out_size)
+        self.W_V = nn.Linear(dim, dim)
 
         self.softmax = nn.Softmax(dim=-1)
         self.gamma = nn.Parameter(torch.tensor(0.0))
@@ -62,20 +72,24 @@ class SAGANAttention(nn.Module):
         att: torch.Tensor (batch_size, length, length)
             Attention weights.
         """
-        x = x.transpose(1, 2)  # (batch_size, dim, length)
+        Q = self.W_Q(x)  # (batch_size, length, out_size)
+        K = self.W_K(x)  # (batch_size, length, out_size)
+        V = self.W_V(x)  # (batch_size, length, dim)
 
-        Q = self.W_Q(x).transpose(1, 2)  # (batch_size, length, out_size)
-        K = self.W_K(x)  # (batch_size, out_size, length)
-        V = self.W_V(x)  # (batch_size, dim, length)
+        Q = split_heads(Q, self.n_heads)  # (batch_size, n_heads, length, d_out_head)
+        K = split_heads(K, self.n_heads)
+        V = split_heads(V, self.n_heads)  # (batch_size, n_heads, length, d_head)
 
-        score = Q @ K  # (batch_size, length, length)
+        score = Q @ K.transpose(2, 3)  # (batch_size, n_heads, length, length)
         score = add_mask(score, mask)
 
-        att = self.softmax(score)  # (batch_size, length, length)
+        att = self.softmax(score)  # (batch_size, n_heads, length, length)
         att = att if self.dropout is None else self.dropout(att)
 
-        out = V @ att.transpose(1, 2)  # (batch_size, dim, length)
-        out = self.gamma * out + x  # residual connection
-        out = out.transpose(1, 2)  # (batch_size, length, dim)
+        context = att @ V  # (batch_size, n_heads, length, d_head)
+        context = combine_heads(context)  # (batch_size, length, dim = n_heads * d_head)
+
+        out = self.gamma * context
+        out = out + x  # residual connection
 
         return out, att

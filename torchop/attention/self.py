@@ -91,7 +91,7 @@ class SelfAttention(nn.Module):
     def __init__(
         self,
         dim: int,
-        n_heads: int,
+        n_heads: int = 8,
         simplified: bool = False,
         dropout: Optional[float] = None
     ) -> None:

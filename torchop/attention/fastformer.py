@@ -81,10 +81,7 @@ class FastAttention(nn.Module):
     """
 
     def __init__(
-        self,
-        dim: int,
-        n_heads: Optional[int] = 8,
-        dropout: Optional[float] = None
+        self, dim: int, n_heads: int = 8, dropout: Optional[float] = None
     ) -> None:
         super(FastAttention, self).__init__()
 

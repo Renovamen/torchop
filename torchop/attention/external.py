@@ -36,7 +36,7 @@ class ExternalAttention(nn.Module):
     def __init__(
         self,
         dim: int,
-        n_heads: Optional[int] = 1,
+        n_heads: int = 1,
         s: int = 64,
         dropout: Optional[float] = None
     ) -> None:

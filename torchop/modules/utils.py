@@ -41,16 +41,14 @@ def add_mask(x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tens
 
     Parameters
     ----------
-    x : torch.Tensor (batch_size, n_heads, *, length) or (batch_size, *, length) or (batch_size, length)
+    x : torch.Tensor (batch_size, n_heads, *, length) or (batch_size, length)
         Input tensor.
 
     mask : torch.Tensor, optional (batch_size, length)
         Mask metrix, ``None`` if it is not needed.
     """
     if mask is not None:
-        if len(x.size()) == 4:  # multi-heads
+        if len(x.size()) == 4:
             expanded_mask = mask.unsqueeze(1).unsqueeze(1)  # (batch_size, 1, 1, length)
-        elif len(x.size()) == 3:  # single head
-            expanded_mask = mask.unsqueeze(1)  # (batch_size, 1, length)
         x = x.masked_fill(expanded_mask.bool(), -np.inf)
     return x
