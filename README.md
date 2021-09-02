@@ -26,6 +26,8 @@ pip install git+https://github.com/Renovamen/torchop.git --upgrade
 
 ## Implemented Networks
 
+### Attention
+
 - Vanilla Attention
 
   [Neural Machine Translation by Jointly Learning to Align and Translate.](https://arxiv.org/abs/1409.0473) ICLR 2015.
@@ -47,3 +49,10 @@ pip install git+https://github.com/Renovamen/torchop.git --upgrade
 - Fast Attention (proposed in Fastformer)
 
   [Fastformer: Additive Attention Can Be All You Need.](https://arxiv.org/abs/2108.09084) arXiv 2021.
+
+
+## Convolution
+
+- Selective Kernel (SK) Convolution
+
+  [Selective Kernel Networks.](https://arxiv.org/abs/1903.06586) CVPR 2019.
