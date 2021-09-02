@@ -79,7 +79,7 @@ class SelfAttention(nn.Module):
 
     simplified : bool, optional, default=False
         Use the simplified version of the Multi-Head Self-Attention or not. See
-        :class:`torchattn.SimplifiedSelfAttention` for details.
+        :class:`torchop.SimplifiedSelfAttention` for details.
 
     dropout : float, optional
         Dropout, ``None`` if no dropout layer.

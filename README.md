@@ -1,6 +1,6 @@
-# torchattn
+# torchop
 
-A collection of some attention networks implemented using PyTorch.
+A collection of some attention/convolution operators implemented using PyTorch.
 
 **WIP**
 
@@ -10,15 +10,15 @@ A collection of some attention networks implemented using PyTorch.
 ## Installation (optional)
 
 ```bash
-git clone https://github.com/Renovamen/torchattn.git
-cd torchattn
+git clone https://github.com/Renovamen/torchop.git
+cd torchop
 python setup.py install
 ```
 
 or
 
 ```bash
-pip install git+https://github.com/Renovamen/torchattn.git --upgrade
+pip install git+https://github.com/Renovamen/torchop.git --upgrade
 ```
 
 

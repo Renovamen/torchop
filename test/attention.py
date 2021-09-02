@@ -5,7 +5,7 @@ import torch
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import torchattn
+import torchop
 
 BATCH_SIZE = 128
 LENGTH = 196
@@ -25,31 +25,31 @@ class TestAttention(unittest.TestCase):
         value = torch.randn(BATCH_SIZE, LENGTH, INPUT_SIZE)
 
         for align_function in ["dot", "general"]:
-            attention = torchattn.VanillaAttention(INPUT_SIZE, align_function)
+            attention = torchop.VanillaAttention(INPUT_SIZE, align_function)
             out, _ = attention(query, value)
             assert out.size() == torch.Size([BATCH_SIZE, INPUT_SIZE])
 
     def test_multi_head_self_attention(self):
-        attention = torchattn.SelfAttention(INPUT_SIZE, N_HEADS)
+        attention = torchop.SelfAttention(INPUT_SIZE, N_HEADS)
         out, _ = attention(INPUT)
         check_self_attention_size(out)
 
-        attention = torchattn.SimplifiedSelfAttention(INPUT_SIZE, N_HEADS)
+        attention = torchop.SimplifiedSelfAttention(INPUT_SIZE, N_HEADS)
         out, _ = attention(INPUT)
         check_self_attention_size(out)
 
     def test_sagan_attention(self):
-        attention = torchattn.SAGANAttention(INPUT_SIZE)
+        attention = torchop.SAGANAttention(INPUT_SIZE)
         out, _ = attention(INPUT)
         check_self_attention_size(out)
 
     def test_external_attention(self):
-        attention = torchattn.ExternalAttention(INPUT_SIZE, N_HEADS)
+        attention = torchop.ExternalAttention(INPUT_SIZE, N_HEADS)
         out, _ = attention(INPUT)
         check_self_attention_size(out)
 
     def test_fast_attention(self):
-        attention = torchattn.FastAttention(INPUT_SIZE, N_HEADS)
+        attention = torchop.FastAttention(INPUT_SIZE, N_HEADS)
         out = attention(INPUT)
         check_self_attention_size(out)
 
