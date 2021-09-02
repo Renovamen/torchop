@@ -3,6 +3,8 @@ import numpy as np
 import torch
 from torch import nn
 
+from ..utils import *
+
 class ScaledDotProductAttention(nn.Module):
     """
     Scaled Dot-Product Attention
@@ -151,19 +153,14 @@ class SelfAttention(nn.Module):
             K = self.W_K(x)
             V = self.W_V(x)
 
-        Q = Q.view(batch_size, -1, self.n_heads, self.d_head)  # (batch_size, length, n_heads, d_head)
-        K = K.view(batch_size, -1, self.n_heads, self.d_head)
-        V = V.view(batch_size, -1, self.n_heads, self.d_head)
-
-        Q, K, V = Q.transpose(1, 2), K.transpose(1, 2), V.transpose(1, 2)  # (batch_size, n_heads, length, d_head)
+        Q, K, V = split_heads(Q, self.n_heads), split_heads(K, self.n_heads), split_heads(V, self.n_heads)  # (batch_size, n_heads, length, d_head)
 
         # for n_heads axis broadcasting
         if mask is not None:
             mask = mask.unsqueeze(1)  # (batch_size, 1, 1, length)
 
         context, att = self.attention(Q, K, V, mask=mask)  # (batch_size, n_heads, length, d_head)
-
-        context = context.transpose(1, 2).contiguous().view(batch_size, -1, self.d_head * self.n_heads)  # (batch_size, length, n_heads * d_head)
+        context = combine_heads(context)  # (batch_size, length, n_heads * d_head)
 
         out = self.fc(context)  # (batch_size, length, dim)
         out = out if self.dropout is None else self.dropout(out)

@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from torch import nn
 
+from ..utils import *
 
 class AdditiveAttention(nn.Module):
     """
@@ -135,11 +136,7 @@ class FastAttention(nn.Module):
         K = self.W_K(x)
         V = self.W_V(x)
 
-        Q = Q.view(batch_size, -1, self.n_heads, self.d_head)  # (batch_size, length, n_heads, d_head)
-        K = K.view(batch_size, -1, self.n_heads, self.d_head)
-        V = V.view(batch_size, -1, self.n_heads, self.d_head)
-
-        Q, K, V = Q.transpose(1, 2), K.transpose(1, 2), V.transpose(1, 2)  # (batch_size, n_heads, length, d_head)
+        Q, K, V = split_heads(Q, self.n_heads), split_heads(K, self.n_heads), split_heads(V, self.n_heads)  # (batch_size, n_heads, length, d_head)
 
         # for n_heads axis broadcasting
         if mask is not None:
@@ -162,7 +159,7 @@ class FastAttention(nn.Module):
         R = R if self.dropout is None else self.dropout(R)
 
         out = R + Q  # residual connection
-        out = out.transpose(1, 2).contiguous().view(batch_size, -1, self.d_head * self.n_heads)  # (batch_size, length, dim = n_heads * d_head)
+        out = combine_heads(out)  # (batch_size, length, dim = n_heads * d_head)
         out = self.fc(out)
 
         return out

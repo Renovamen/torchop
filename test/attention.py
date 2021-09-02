@@ -20,14 +20,14 @@ def check_self_attention_size(x):
 
 
 class TestAttention(unittest.TestCase):
-    def test_vanilla(self):
-        query = torch.randn(BATCH_SIZE, INPUT_SIZE)
-        value = torch.randn(BATCH_SIZE, LENGTH, INPUT_SIZE)
+    # def test_vanilla(self):
+    #     query = torch.randn(BATCH_SIZE, INPUT_SIZE)
+    #     value = torch.randn(BATCH_SIZE, LENGTH, INPUT_SIZE)
 
-        for align_function in ["dot", "general"]:
-            attention = torchattn.VanillaAttention(INPUT_SIZE, align_function)
-            out, _ = attention(query, value)
-            assert out.size() == torch.Size([BATCH_SIZE, INPUT_SIZE])
+    #     for align_function in ["dot", "general"]:
+    #         attention = torchattn.VanillaAttention(INPUT_SIZE, align_function)
+    #         out, _ = attention(query, value)
+    #         assert out.size() == torch.Size([BATCH_SIZE, INPUT_SIZE])
 
     def test_multi_head_self_attention(self):
         attention = torchattn.SelfAttention(INPUT_SIZE, N_HEADS)

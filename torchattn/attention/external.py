@@ -2,6 +2,8 @@ from typing import Tuple, Optional
 import torch
 from torch import nn
 
+from ..utils import *
+
 class ExternalAttention(nn.Module):
     """
     Implementation of External Attention proposed in [1].
@@ -76,15 +78,14 @@ class ExternalAttention(nn.Module):
         batch_size = x.size(0)
 
         Q = self.W_Q(x)  # (batch_size, length, n_heads * d_head)
-        Q = Q.view(batch_size, -1, self.n_heads, self.d_head)  # (batch_size, length, n_heads, d_head)
-        Q = Q.transpose(1, 2)  # (batch_size, n_heads, length, d_head)
+        Q = split_heads(Q, self.n_heads)  # (batch_size, n_heads, length, d_head)
 
         score = self.M_K(Q).transpose(2, 3)  # (batch_size, n_heads, s, length)
         att = self.double_norm(score).transpose(2, 3)  # (batch_size, n_heads, length, s)
         att = att if self.dropout is None else self.dropout(att)
 
         context = self.M_V(att)  # (batch_size, n_heads, length, d_head)
-        context = context.transpose(1, 2).contiguous().view(batch_size, -1, self.d_head * self.n_heads)  # (batch_size, length, n_heads * d_head)
+        context = combine_heads(context)  # (batch_size, length, n_heads * d_head)
 
         out = self.fc(context).transpose(1, 2)  # (batch_size, dim, length)
         out = self.batch_norm(out).transpose(1, 2)  # BatchNorm (batch_size, length, dim)
