@@ -1,9 +1,8 @@
 from typing import Tuple, Optional
-import numpy as np
 import torch
 from torch import nn
 
-from ..utils import *
+from ..modules import *
 
 class AdditiveAttention(nn.Module):
     """
@@ -28,7 +27,9 @@ class AdditiveAttention(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
         self.dropout = None if dropout is None else nn.Dropout(dropout)
 
-    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None):
+    def forward(
+        self, x: torch.Tensor, mask: Optional[torch.Tensor] = None
+    ) -> Tuple[torch.Tensor]:
         """
         Parameters
         ----------
@@ -47,9 +48,7 @@ class AdditiveAttention(nn.Module):
             Attention weights.
         """
         score = self.attention(x).transpose(2, 3) / self.scale  # (batch_size, n_heads, 1, length)
-
-        if mask is not None:
-            score = score.masked_fill(mask.bool(), -np.inf)
+        score = add_mask(score, mask)
 
         att = self.softmax(score)
         att = att if self.dropout is None else self.dropout(att)
@@ -130,17 +129,11 @@ class FastAttention(nn.Module):
         att: torch.Tensor (batch_size, length, length)
             Attention weights.
         """
-        batch_size = x.size(0)
-
         Q = self.W_Q(x)  # (batch_size, length, n_heads * d_head)
         K = self.W_K(x)
         V = self.W_V(x)
 
         Q, K, V = split_heads(Q, self.n_heads), split_heads(K, self.n_heads), split_heads(V, self.n_heads)  # (batch_size, n_heads, length, d_head)
-
-        # for n_heads axis broadcasting
-        if mask is not None:
-            mask = mask.unsqueeze(1)  # (batch_size, 1, length)
 
         # global attention query vector
         global_Q, _ = self.attn_Q(Q, mask)  # (batch_size, n_heads, 1, d_head)

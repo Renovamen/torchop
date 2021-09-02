@@ -2,7 +2,7 @@ from typing import Tuple, Optional
 import torch
 from torch import nn
 
-from ..utils import *
+from ..modules import *
 
 class ExternalAttention(nn.Module):
     """
@@ -59,13 +59,18 @@ class ExternalAttention(nn.Module):
         self.dropout = None if dropout is None else nn.Dropout(dropout)
         self.relu = nn.ReLU()
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor]:
+    def forward(
+        self, x: torch.Tensor, mask: Optional[torch.Tensor] = None
+    ) -> Tuple[torch.Tensor]:
         """
         Parameters
         ----------
         x : torch.Tensor (batch_size, length, dim)
             Input data, where ``length`` is the length (number of features) of the input and
             ``dim`` is the dimension of the features.
+
+        mask : torch.Tensor, optional (batch_size, length)
+            Mask metrix, ``None`` if it is not needed.
 
         Returns
         -------
@@ -75,12 +80,12 @@ class ExternalAttention(nn.Module):
         att: torch.Tensor (batch_size, length, length)
             Attention weights.
         """
-        batch_size = x.size(0)
-
         Q = self.W_Q(x)  # (batch_size, length, n_heads * d_head)
         Q = split_heads(Q, self.n_heads)  # (batch_size, n_heads, length, d_head)
 
         score = self.M_K(Q).transpose(2, 3)  # (batch_size, n_heads, s, length)
+        score = add_mask(score, mask)
+
         att = self.double_norm(score).transpose(2, 3)  # (batch_size, n_heads, length, s)
         att = att if self.dropout is None else self.dropout(att)
 

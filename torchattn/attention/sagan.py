@@ -2,6 +2,8 @@ from typing import Tuple, Optional
 import torch
 from torch import nn
 
+from ..modules import add_mask
+
 class SAGANAttention(nn.Module):
     """
     Implementation of the attention layer proposed in [1].
@@ -39,13 +41,18 @@ class SAGANAttention(nn.Module):
 
         self.dropout = None if dropout is None else nn.Dropout(dropout)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor]:
+    def forward(
+        self, x: torch.Tensor, mask: Optional[torch.Tensor] = None
+    ) -> Tuple[torch.Tensor]:
         """
         Parameters
         ----------
         x : torch.Tensor (batch_size, length, dim)
             Input data, where ``length`` is the length (number of features) of the input and
             ``dim`` is the dimension of the features.
+
+        mask : torch.Tensor, optional (batch_size, length)
+            Mask metrix, ``None`` if it is not needed.
 
         Returns
         -------
@@ -62,6 +69,8 @@ class SAGANAttention(nn.Module):
         V = self.W_V(x)  # (batch_size, dim, length)
 
         score = Q @ K  # (batch_size, length, length)
+        score = add_mask(score, mask)
+
         att = self.softmax(score)  # (batch_size, length, length)
         att = att if self.dropout is None else self.dropout(att)
 

@@ -1,9 +1,8 @@
 from typing import Tuple, Optional
-import numpy as np
 import torch
 from torch import nn
 
-from ..utils import *
+from ..modules import *
 
 class ScaledDotProductAttention(nn.Module):
     """
@@ -30,7 +29,7 @@ class ScaledDotProductAttention(nn.Module):
         K: torch.Tensor,
         V: torch.Tensor,
         mask: Optional[torch.Tensor] = None
-    ):
+    ) -> Tuple[torch.Tensor]:
         """
         Parameters
         ----------
@@ -56,10 +55,7 @@ class ScaledDotProductAttention(nn.Module):
         """
         # Q·K^T / sqrt(d_head)
         score = torch.matmul(Q / self.scale, K.transpose(2, 3))  # (batch_size, n_heads, length, length)
-
-        # mask away by setting such weights to a large negative number, so that they evaluate to 0 under the softmax
-        if mask is not None:
-            score = score.masked_fill(mask.bool(), -np.inf)
+        score = add_mask(score, mask)
 
         # eq.1: Attention(Q, K, V) = softmax(Q·K^T / sqrt(d_head))·V
         att = self.softmax(score)  # (batch_size, n_heads, length, length)
@@ -133,7 +129,7 @@ class SelfAttention(nn.Module):
             Input data, where ``length`` is the length (number of features) of the input and
             ``dim`` is the dimension of the features.
 
-        mask : torch.Tensor, optional (batch_size, 1, length)
+        mask : torch.Tensor, optional (batch_size, length)
             Mask metrix, ``None`` if it is not needed.
 
         Returns
@@ -144,8 +140,6 @@ class SelfAttention(nn.Module):
         att: torch.Tensor (batch_size, n_heads, length, length)
             Attention weights.
         """
-        batch_size = x.size(0)
-
         if self.simplified:
             Q = K = V = x
         else:
@@ -154,10 +148,6 @@ class SelfAttention(nn.Module):
             V = self.W_V(x)
 
         Q, K, V = split_heads(Q, self.n_heads), split_heads(K, self.n_heads), split_heads(V, self.n_heads)  # (batch_size, n_heads, length, d_head)
-
-        # for n_heads axis broadcasting
-        if mask is not None:
-            mask = mask.unsqueeze(1)  # (batch_size, 1, 1, length)
 
         context, att = self.attention(Q, K, V, mask=mask)  # (batch_size, n_heads, length, d_head)
         context = combine_heads(context)  # (batch_size, length, n_heads * d_head)

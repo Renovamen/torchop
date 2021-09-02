@@ -1,7 +1,8 @@
 from typing import Optional
-import numpy as np
 import torch
 from torch import nn
+
+from ..modules import add_mask
 
 class VanillaAttention(nn.Module):
     """
@@ -76,10 +77,7 @@ class VanillaAttention(nn.Module):
         # alignment scores
         query = query if self.align_function == "dot" else self.fc_align(query)  # (batch_size, dim)
         score = (value @ query.unsqueeze(2)).squeeze(2)  # (batch_size, length)
-
-        # mask alignment scores
-        if mask is not None:
-            score = score.masked_fill(mask.bool(), -np.inf)
+        score = add_mask(score, mask)
 
         # attention weights
         att = self.softmax(score)  # (batch_size, length)
