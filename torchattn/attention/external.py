@@ -13,7 +13,7 @@ class ExternalAttention(nn.Module):
 
     Parameters
     ----------
-    input_size : int
+    dim : int
         Dimension of the input features.
 
     s : int, optional, default=64
@@ -33,25 +33,25 @@ class ExternalAttention(nn.Module):
 
     def __init__(
         self,
-        input_size: int,
+        dim: int,
         n_heads: Optional[int] = 1,
         s: int = 64,
         dropout: Optional[float] = None
     ) -> None:
         super(ExternalAttention, self).__init__()
 
-        assert input_size % n_heads == 0
+        assert dim % n_heads == 0
 
         self.n_heads = n_heads
-        self.dim_head = input_size // n_heads
+        self.d_head = dim // n_heads
 
-        self.W_Q = nn.Linear(input_size, n_heads * self.dim_head)
-        self.M_K = nn.Linear(self.dim_head, s, bias=False)  # memory unit
-        self.M_V = nn.Linear(s, self.dim_head, bias=False)  # memory unit
+        self.W_Q = nn.Linear(dim, n_heads * self.d_head)
+        self.M_K = nn.Linear(self.d_head, s, bias=False)  # memory unit
+        self.M_V = nn.Linear(s, self.d_head, bias=False)  # memory unit
         self.M_V.weight.data = self.M_K.weight.data.transpose(0, 1)  # initialization of M_V and M_K should be the same
 
-        self.fc = nn.Linear(input_size, input_size, bias=False)
-        self.batch_norm = nn.BatchNorm1d(input_size)
+        self.fc = nn.Linear(dim, dim, bias=False)
+        self.batch_norm = nn.BatchNorm1d(dim)
 
         self.softmax = nn.Softmax(dim=-1)
         self.dropout = None if dropout is None else nn.Dropout(dropout)
@@ -61,33 +61,33 @@ class ExternalAttention(nn.Module):
         """
         Parameters
         ----------
-        x : torch.Tensor (batch_size, length, input_size)
+        x : torch.Tensor (batch_size, length, dim)
             Input data, where ``length`` is the length (number of features) of the input and
-            ``input_size`` is the dimension of the features.
+            ``dim`` is the dimension of the features.
 
         Returns
         -------
-        out : torch.Tensor (batch_size, length, input_size)
-            Output of simple self-attention network
+        out : torch.Tensor (batch_size, length, dim)
+            Output of the attention layer.
 
         att: torch.Tensor (batch_size, length, length)
-            Attention weights
+            Attention weights.
         """
         batch_size = x.size(0)
 
-        Q = self.W_Q(x)  # (batch_size, length, n_heads * dim_head)
-        Q = Q.view(batch_size, -1, self.n_heads, self.dim_head)  # (batch_size, length, n_heads, dim_head)
-        Q = Q.transpose(1, 2)  # (batch_size, n_heads, length, dim_head)
+        Q = self.W_Q(x)  # (batch_size, length, n_heads * d_head)
+        Q = Q.view(batch_size, -1, self.n_heads, self.d_head)  # (batch_size, length, n_heads, d_head)
+        Q = Q.transpose(1, 2)  # (batch_size, n_heads, length, d_head)
 
         score = self.M_K(Q).transpose(2, 3)  # (batch_size, n_heads, s, length)
         att = self.double_norm(score).transpose(2, 3)  # (batch_size, n_heads, length, s)
         att = att if self.dropout is None else self.dropout(att)
 
-        context = self.M_V(att)  # (batch_size, n_heads, length, dim_head)
-        context = context.transpose(1, 2).contiguous().view(batch_size, -1, self.dim_head * self.n_heads)  # (batch_size, length, n_heads * dim_head)
+        context = self.M_V(att)  # (batch_size, n_heads, length, d_head)
+        context = context.transpose(1, 2).contiguous().view(batch_size, -1, self.d_head * self.n_heads)  # (batch_size, length, n_heads * d_head)
 
-        out = self.fc(context).transpose(1, 2)  # (batch_size, input_size, length)
-        out = self.batch_norm(out).transpose(1, 2)  # BatchNorm (batch_size, length, input_size)
+        out = self.fc(context).transpose(1, 2)  # (batch_size, dim, length)
+        out = self.batch_norm(out).transpose(1, 2)  # BatchNorm (batch_size, length, dim)
         out = out + x  # residual connection
         out = self.relu(out)
 

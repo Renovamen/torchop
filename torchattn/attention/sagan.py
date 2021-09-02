@@ -4,14 +4,14 @@ from torch import nn
 
 class SAGANAttention(nn.Module):
     """
-    Implementation of attention layer proposed in [1].
+    Implementation of the attention layer proposed in [1].
 
     Parameters
     ----------
-    input_size : int
+    dim : int
         Dimension of the input features.
 
-    reduce_coef : int, optional, default=8
+    reduction : int, optional, default=8
         Factor to reduce the channel number.
 
     dropout : float, optional
@@ -24,15 +24,15 @@ class SAGANAttention(nn.Module):
     """
 
     def __init__(
-        self, input_size: int, reduce_coef: int = 8, dropout: Optional[float] = None
+        self, dim: int, reduction: int = 8, dropout: Optional[float] = None
     ) -> None:
         super(SAGANAttention, self).__init__()
 
-        out_size = input_size // reduce_coef
+        out_size = dim // reduction
 
-        self.W_Q = nn.Conv1d(input_size, out_size, kernel_size=1)
-        self.W_K = nn.Conv1d(input_size, out_size, kernel_size=1)
-        self.W_V = nn.Conv1d(input_size, input_size, kernel_size=1)
+        self.W_Q = nn.Conv1d(dim, out_size, kernel_size=1)
+        self.W_K = nn.Conv1d(dim, out_size, kernel_size=1)
+        self.W_V = nn.Conv1d(dim, dim, kernel_size=1)
 
         self.softmax = nn.Softmax(dim=-1)
         self.gamma = nn.Parameter(torch.tensor(0.0))
@@ -43,30 +43,30 @@ class SAGANAttention(nn.Module):
         """
         Parameters
         ----------
-        x : torch.Tensor (batch_size, length, input_size)
+        x : torch.Tensor (batch_size, length, dim)
             Input data, where ``length`` is the length (number of features) of the input and
-            ``input_size`` is the dimension of the features.
+            ``dim`` is the dimension of the features.
 
         Returns
         -------
-        out : torch.Tensor (batch_size, length, input_size)
-            Output of simple self-attention network
+        out : torch.Tensor (batch_size, length, dim)
+            Output of the attention layer.
 
         att: torch.Tensor (batch_size, length, length)
-            Attention weights
+            Attention weights.
         """
-        x = x.transpose(1, 2)  # (batch_size, input_size, length)
+        x = x.transpose(1, 2)  # (batch_size, dim, length)
 
         Q = self.W_Q(x).transpose(1, 2)  # (batch_size, length, out_size)
         K = self.W_K(x)  # (batch_size, out_size, length)
-        V = self.W_V(x)  # (batch_size, input_size, length)
+        V = self.W_V(x)  # (batch_size, dim, length)
 
         score = Q @ K  # (batch_size, length, length)
         att = self.softmax(score)  # (batch_size, length, length)
         att = att if self.dropout is None else self.dropout(att)
 
-        out = V @ att.transpose(1, 2)  # (batch_size, input_size, length)
+        out = V @ att.transpose(1, 2)  # (batch_size, dim, length)
         out = self.gamma * out + x  # residual connection
-        out = out.transpose(1, 2)  # (batch_size, length, input_size)
+        out = out.transpose(1, 2)  # (batch_size, length, dim)
 
         return out, att

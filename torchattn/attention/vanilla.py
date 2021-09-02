@@ -9,7 +9,7 @@ class VanillaAttention(nn.Module):
 
     Parameters
     ----------
-    input_size : int
+    dim : int
         Size of the input tensor
 
     align_function : str, optional, default="general"
@@ -28,7 +28,7 @@ class VanillaAttention(nn.Module):
     """
     def __init__(
         self,
-        input_size: int,
+        dim: int,
         align_function: str = "general",
         dropout: Optional[float] = None
     ) -> None:
@@ -37,12 +37,12 @@ class VanillaAttention(nn.Module):
         self.align_function = align_function
 
         if align_function == "general":
-            self.fc_align = nn.Linear(input_size, input_size)
+            self.fc_align = nn.Linear(dim, dim)
         elif align_function != 'dot':
             raise ValueError('Invalid alignment score function: {0}'.format(align_function))
 
-        self.fc_query = nn.Linear(input_size, input_size)
-        self.fc_value = nn.Linear(input_size, input_size)
+        self.fc_query = nn.Linear(dim, dim)
+        self.fc_value = nn.Linear(dim, dim)
 
         self.softmax = nn.Softmax(dim=1)
         self.tanh = nn.Tanh()
@@ -55,10 +55,10 @@ class VanillaAttention(nn.Module):
         """
         Parameters
         ----------
-        query : torch.Tensor (batch_size, input_size)
+        query : torch.Tensor (batch_size, dim)
             Query
 
-        value : torch.Tensor (batch_size, length, input_size)
+        value : torch.Tensor (batch_size, length, dim)
             Value
 
         mask : torch.Tensor, optional (batch_size, length)
@@ -66,7 +66,7 @@ class VanillaAttention(nn.Module):
 
         Returns
         -------
-        out : torch.Tensor (batch_size, input_size)
+        out : torch.Tensor (batch_size, dim)
             Output tensor
 
         att: torch.Tensor (batch_size, length)
@@ -74,7 +74,7 @@ class VanillaAttention(nn.Module):
         """
 
         # alignment scores
-        query = query if self.align_function == "dot" else self.fc_align(query)  # (batch_size, input_size)
+        query = query if self.align_function == "dot" else self.fc_align(query)  # (batch_size, dim)
         score = (value @ query.unsqueeze(2)).squeeze(2)  # (batch_size, length)
 
         # mask alignment scores
@@ -86,7 +86,7 @@ class VanillaAttention(nn.Module):
         att = att if self.dropout is None else self.dropout(att)
 
         # context vector (weighted value)
-        context = (att.unsqueeze(1) @ value).squeeze(1)  # (batch_size, input_size)
+        context = (att.unsqueeze(1) @ value).squeeze(1)  # (batch_size, dim)
 
         # attention result
         out = self.tanh(self.fc_value(context) + self.fc_query(query))

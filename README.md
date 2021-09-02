@@ -43,3 +43,7 @@ pip install git+https://github.com/Renovamen/torchattn.git --upgrade
 - External Attention
 
   [Beyond Self-attention: External Attention using Two Linear Layers for Visual Tasks.](https://arxiv.org/abs/2105.02358) arXiv 2021.
+
+- Fast Attention (proposed in Fastformer)
+
+  [Fastformer: Additive Attention Can Be All You Need.](https://arxiv.org/abs/2108.09084) arXiv 2021.
