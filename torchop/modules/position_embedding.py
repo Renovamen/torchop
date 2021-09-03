@@ -53,14 +53,14 @@ class RelativePositionEmbedding(nn.Module):
         batch_size, h, w, _ = x.shape
         rel_size = rel.shape[0]
 
-        x = x @ rel.transpose(0, 1)  # (batch_size, h, w, rel_size)
-        x = x.view(-1, w, rel_size)  # (batch_size * h, w, rel_size)
+        logits = x @ rel.transpose(0, 1)  # (batch_size, h, w, rel_size)
+        logits = logits.view(-1, w, rel_size)  # (batch_size * h, w, rel_size)
 
-        x = self.rel_to_abs(x)  # (batch_size * h, w, window_size)
-        x = x.reshape(batch_size, h, 1, w, self.window_size)
-        x = x.expand(-1, -1, self.window_size, -1, -1)  # (batch_size, h, window_size, w, window_size)
+        logits = self.rel_to_abs(logits)  # (batch_size * h, w, window_size)
+        logits = logits.reshape(batch_size, h, 1, w, self.window_size)
+        logits = logits.expand(-1, -1, self.window_size, -1, -1)  # (batch_size, h, window_size, w, window_size)
 
-        return x
+        return logits
 
     def rel_to_abs(self, x: torch.Tensor) -> torch.Tensor:
         batch_size, length, rel_size = x.shape
