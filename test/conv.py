@@ -28,6 +28,11 @@ class TestAttention(unittest.TestCase):
         out = conv(INPUT)
         assert out.size() == torch.Size([BATCH_SIZE, IN_CHANNELS, WIDTH // STRIDE, HEIGHT // STRIDE])
 
+    def test_seblock(self):
+        conv = torchop.SEBlock(IN_CHANNELS)
+        out = conv(INPUT)
+        assert out.size() == torch.Size([BATCH_SIZE, IN_CHANNELS, WIDTH, HEIGHT])
+
 
 if __name__ == '__main__':
     unittest.main()

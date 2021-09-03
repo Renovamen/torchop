@@ -17,7 +17,7 @@ class SKConv(nn.Module):
     kernels : List[int], optional, default=[3, 5]
         List of kernel sizes for each branch.
 
-    r : int, optional, default=16
+    reduction : int, optional, default=16
         Reduction ratio to control the dimension of "compact feature" ``z`` (see eq.4).
 
     L : int, optional, default=32
@@ -36,13 +36,13 @@ class SKConv(nn.Module):
         in_channels: int,
         out_channels: Optional[int] = None,
         kernels: List[int] = [3, 5],
-        r: int = 16,
+        reduction: int = 16,
         L: int = 32,
         groups: int = 32
     ) -> None:
         super(SKConv, self).__init__()
 
-        d = max(in_channels // r, L)  # eq.4
+        d = max(in_channels // reduction, L)  # eq.4
 
         self.M = len(kernels)
 

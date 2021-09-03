@@ -60,3 +60,7 @@ pip install git+https://github.com/Renovamen/torchop.git --upgrade
 - Involution
 
   [Involution: Inverting the Inherence of Convolution for Visual Recognition.](https://arxiv.org/abs/2103.06255) CVPR 2021.
+
+- Squeeze-and-Excitation (SE) Block
+
+  [Squeeze-and-Excitation Networks.](https://arxiv.org/abs/1709.01507) CVPR 2018.
