@@ -2,7 +2,7 @@ from typing import Tuple, Optional
 import torch
 from torch import nn
 
-from ..modules import *
+from ..modules.utils import *
 
 class SAGANAttention(nn.Module):
     """

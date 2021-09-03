@@ -68,8 +68,8 @@ class Involution(nn.Module):
         out : torch.Tensor (batch_size, in_channels, H = height / stride, W = width / stride)
             Output of the involution layer.
         """
-        width, height = x.size(2), x.size(3)
-        assert width % self.stride == 0 and height % self.stride == 0
+        height, width = x.size(2), x.size(3)
+        assert height % self.stride == 0 and width % self.stride == 0
 
         # ----- generate kernal -----
         kernel = self.conv(self.pool(x))  # (batch_size, G * K * K, H = height / stride, W = width / stride)

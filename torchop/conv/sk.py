@@ -80,20 +80,20 @@ class SKConv(nn.Module):
         """
         Parameters
         ----------
-        x : torch.Tensor (batch_size, in_channels, width, height)
+        x : torch.Tensor (batch_size, in_channels, height, width)
             Input tensor.
 
         Returns
         -------
-        out : torch.Tensor (batch_size, out_channels, width, height)
+        out : torch.Tensor (batch_size, out_channels, height, width)
             Output of the SK convolution layer.
         """
         # ----- split -----
-        feats = torch.cat([conv(x).unsqueeze(1) for conv in self.convs], dim=1)  # (batch_size, M, out_channels, width, height)
+        feats = torch.cat([conv(x).unsqueeze(1) for conv in self.convs], dim=1)  # (batch_size, M, out_channels, height, width)
 
         # ----- fuse -----
         # eq.1
-        U = torch.sum(feats, dim=1)  # (batch_size, out_channels, width, height)
+        U = torch.sum(feats, dim=1)  # (batch_size, out_channels, height, width)
         # channel-wise statistics, eq.2
         s = self.pool(U).squeeze(-1).squeeze(-1)  # (batch_size, out_channels)
         # compact feature, eq.3
@@ -108,5 +108,5 @@ class SKConv(nn.Module):
         att = self.softmax(score)
 
         # fuse multiple branches, eq.6
-        out = torch.sum(att * feats, dim=1)  # (batch_size, out_channels, width, height)
+        out = torch.sum(att * feats, dim=1)  # (batch_size, out_channels, height, width)
         return out

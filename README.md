@@ -50,6 +50,10 @@ pip install git+https://github.com/Renovamen/torchop.git --upgrade
 
   [Fastformer: Additive Attention Can Be All You Need.](https://arxiv.org/abs/2108.09084) arXiv 2021.
 
+- Halo Attention (or Blocked Local Self-Attention)
+
+  [Scaling Local Self-Attention for Parameter Efficient Visual Backbones.](https://arxiv.org/abs/2103.12731) CVPR 2019.
+
 
 ## Convolution
 

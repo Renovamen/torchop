@@ -39,12 +39,12 @@ class SEBlock(nn.Module):
         """
         Parameters
         ----------
-        x : torch.Tensor (batch_size, in_channels, width, height)
+        x : torch.Tensor (batch_size, in_channels, height, width)
             Input tensor.
 
         Returns
         -------
-        out : torch.Tensor (batch_size, in_channels, width, height)
+        out : torch.Tensor (batch_size, in_channels, height, width)
             Output of the SK convolution layer.
         """
         z = self.squeeze(x)  # (batch_size, in_channels, 1, 1), eq.2
