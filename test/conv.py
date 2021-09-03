@@ -16,14 +16,17 @@ HEIGHT = 56
 INPUT = torch.randn(BATCH_SIZE, IN_CHANNELS, WIDTH, HEIGHT)
 
 
-def check_self_attention_size(x):
-    assert x.size() == torch.Size([BATCH_SIZE, IN_CHANNELS, WIDTH, HEIGHT])
-
 class TestAttention(unittest.TestCase):
     def test_skconv(self):
         conv = torchop.SKConv(IN_CHANNELS)
         out = conv(INPUT)
-        check_self_attention_size(out)
+        assert out.size() == torch.Size([BATCH_SIZE, IN_CHANNELS, WIDTH, HEIGHT])
+
+    def test_involution(self):
+        STRIDE = 4
+        conv = torchop.Involution(IN_CHANNELS, kernel_size=3, stride=STRIDE)
+        out = conv(INPUT)
+        assert out.size() == torch.Size([BATCH_SIZE, IN_CHANNELS, WIDTH // STRIDE, HEIGHT // STRIDE])
 
 
 if __name__ == '__main__':

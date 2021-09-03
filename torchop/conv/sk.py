@@ -15,7 +15,7 @@ class SKConv(nn.Module):
         Number of channels produced by the convolution.
 
     kernels : List[int], optional, default=[3, 5]
-        List of kernel sizes for each convolution layer.
+        List of kernel sizes for each branch.
 
     r : int, optional, default=16
         Reduction ratio to control the dimension of "compact feature" ``z`` (see eq.4).
@@ -85,7 +85,7 @@ class SKConv(nn.Module):
 
         Returns
         -------
-        out : torch.Tensor (batch_size, out_channels)
+        out : torch.Tensor (batch_size, out_channels, width, height)
             Output of the SK convolution layer.
         """
         # ----- split -----

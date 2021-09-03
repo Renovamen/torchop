@@ -56,3 +56,7 @@ pip install git+https://github.com/Renovamen/torchop.git --upgrade
 - Selective Kernel (SK) Convolution
 
   [Selective Kernel Networks.](https://arxiv.org/abs/1903.06586) CVPR 2019.
+
+- Involution
+
+  [Involution: Inverting the Inherence of Convolution for Visual Recognition.](https://arxiv.org/abs/2103.06255) CVPR 2021.
