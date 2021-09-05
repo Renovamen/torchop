@@ -16,6 +16,23 @@ class HaloAttention(nn.Module):
     local self-attention actually improves the accuracy of the model (see Section 4.3)". So I
     didn't implement mask operation here either. But maybe I should investigate.
 
+    Parameters
+    ----------
+    dim : int
+        Dimension of the input features.
+
+    n_heads : int, optional, default=1
+        Number of attention heads.
+
+    block_size : int, optional, default=8
+        Size of each image block.
+
+    halo_size: int, optional, default=3
+        Size of the padded boundary (halo).
+
+    dropout : float, optional
+        Dropout, ``None`` if no dropout layer
+
     References
     ----------
     1. "`Scaling Local Self-Attention for Parameter Efficient Visual Backbones. \

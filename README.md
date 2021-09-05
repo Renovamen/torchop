@@ -2,6 +2,8 @@
 
 A collection of some attention/convolution operators implemented using PyTorch.
 
+这里是一篇介绍它们的[博客](https://zxh.io/post/2021/08/31/attention-conv/)
+
 **WIP**
 
 
