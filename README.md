@@ -56,6 +56,10 @@ pip install git+https://github.com/Renovamen/torchop.git --upgrade
 
   [Scaling Local Self-Attention for Parameter Efficient Visual Backbones.](https://arxiv.org/abs/2103.12731) CVPR 2019.
 
+- LinAttention (proposed in Linformer)
+
+  [Linformer: Self-Attention with Linear Complexity.](https://arxiv.org/abs/2006.04768) arXiv 2020.
+
 
 ## Convolution
 

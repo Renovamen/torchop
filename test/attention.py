@@ -37,21 +37,21 @@ class TestAttention(unittest.TestCase):
 
     def test_multi_head_self_attention(self):
         attention = torchop.SelfAttention(INPUT_SIZE, N_HEADS)
-        out, _ = attention(INPUT)
+        out = attention(INPUT)
         check_size(out)
 
         attention = torchop.SimplifiedSelfAttention(INPUT_SIZE, N_HEADS)
-        out, _ = attention(INPUT)
+        out = attention(INPUT)
         check_size(out)
 
     def test_sagan_attention(self):
         attention = torchop.SAGANAttention(INPUT_SIZE)
-        out, _ = attention(INPUT)
+        out = attention(INPUT)
         check_size(out)
 
     def test_external_attention(self):
         attention = torchop.ExternalAttention(INPUT_SIZE, N_HEADS)
-        out, _ = attention(INPUT)
+        out = attention(INPUT)
         check_size(out)
 
     def test_fast_attention(self):
@@ -63,6 +63,11 @@ class TestAttention(unittest.TestCase):
         attention = torchop.HaloAttention(INPUT_SIZE, N_HEADS)
         out = attention(INPUT_IMAGE)
         check_size_image(out)
+
+    def test_lin_attention(self):
+        attention = torchop.LinAttention(INPUT_SIZE, LENGTH, N_HEADS)
+        out = attention(INPUT)
+        check_size(out)
 
 if __name__ == '__main__':
     unittest.main()

@@ -68,9 +68,6 @@ class SAGANAttention(nn.Module):
         -------
         out : torch.Tensor (batch_size, length, dim)
             Output of the attention layer.
-
-        att: torch.Tensor (batch_size, length, length)
-            Attention weights.
         """
         Q = self.W_Q(x)  # (batch_size, length, out_size)
         K = self.W_K(x)  # (batch_size, length, out_size)
@@ -92,4 +89,4 @@ class SAGANAttention(nn.Module):
         out = self.gamma * context
         out = out + x  # residual connection
 
-        return out, att
+        return out

@@ -4,6 +4,7 @@ from .sagan import SAGANAttention
 from .external import ExternalAttention
 from .fastformer import FastAttention
 from .halo import HaloAttention
+from .linformer import LinAttention
 
 __all__ = [
     'VanillaAttention',
@@ -12,5 +13,6 @@ __all__ = [
     'SimplifiedSelfAttention',
     'ExternalAttention',
     'FastAttention',
-    'HaloAttention'
+    'HaloAttention',
+    'LinAttention'
 ]

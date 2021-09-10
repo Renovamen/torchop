@@ -76,9 +76,6 @@ class ExternalAttention(nn.Module):
         -------
         out : torch.Tensor (batch_size, length, dim)
             Output of the attention layer.
-
-        att: torch.Tensor (batch_size, length, length)
-            Attention weights.
         """
         Q = self.W_Q(x)  # (batch_size, length, n_heads * d_head)
         Q = split_heads(Q, self.n_heads)  # (batch_size, n_heads, length, d_head)
@@ -97,7 +94,7 @@ class ExternalAttention(nn.Module):
         out = out + x  # residual connection
         out = self.relu(out)
 
-        return out, att
+        return out
 
     def double_norm(self, x: torch.Tensor) -> torch.Tensor:
         """Double-normalization mentioned in section 3.2 of the paper."""

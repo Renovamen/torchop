@@ -136,9 +136,6 @@ class SelfAttention(nn.Module):
         -------
         out : torch.Tensor (batch_size, length, dim)
             Output of multi-head self-attention network.
-
-        att: torch.Tensor (batch_size, n_heads, length, length)
-            Attention weights.
         """
         if self.simplified:
             Q = K = V = x
@@ -149,7 +146,7 @@ class SelfAttention(nn.Module):
 
         Q, K, V = split_heads(Q, self.n_heads), split_heads(K, self.n_heads), split_heads(V, self.n_heads)  # (batch_size, n_heads, length, d_head)
 
-        context, att = self.attention(Q, K, V, mask=mask)  # (batch_size, n_heads, length, d_head)
+        context, _ = self.attention(Q, K, V, mask=mask)  # (batch_size, n_heads, length, d_head)
         context = combine_heads(context)  # (batch_size, length, n_heads * d_head)
 
         out = self.fc(context)  # (batch_size, length, dim)
@@ -158,7 +155,7 @@ class SelfAttention(nn.Module):
         out = out + x  # residual connection
         out = self.layer_norm(out)  # LayerNorm
 
-        return out, att
+        return out
 
 
 class SimplifiedSelfAttention(SelfAttention):

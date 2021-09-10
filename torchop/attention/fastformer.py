@@ -122,9 +122,6 @@ class FastAttention(nn.Module):
         -------
         out : torch.Tensor (batch_size, length, dim)
             Output of simple self-attention network.
-
-        att: torch.Tensor (batch_size, length, length)
-            Attention weights.
         """
         Q = self.W_Q(x)  # (batch_size, length, n_heads * d_head)
         K = self.W_K(x)
