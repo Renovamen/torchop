@@ -16,11 +16,15 @@ HEIGHT = 56
 INPUT = torch.randn(BATCH_SIZE, IN_CHANNELS, HEIGHT, WIDTH)
 
 
+def check_size(x):
+    assert x.size() == torch.Size([BATCH_SIZE, IN_CHANNELS, HEIGHT, WIDTH])
+
+
 class TestAttention(unittest.TestCase):
     def test_skconv(self):
         conv = torchop.SKConv(IN_CHANNELS)
         out = conv(INPUT)
-        assert out.size() == torch.Size([BATCH_SIZE, IN_CHANNELS, HEIGHT, WIDTH])
+        check_size(out)
 
     def test_involution(self):
         STRIDE = 4
@@ -31,7 +35,12 @@ class TestAttention(unittest.TestCase):
     def test_seblock(self):
         conv = torchop.SEBlock(IN_CHANNELS)
         out = conv(INPUT)
-        assert out.size() == torch.Size([BATCH_SIZE, IN_CHANNELS, HEIGHT, WIDTH])
+        check_size(out)
+
+    def test_cbam(self):
+        conv = torchop.CBAM(IN_CHANNELS)
+        out = conv(INPUT)
+        check_size(out)
 
 
 if __name__ == '__main__':

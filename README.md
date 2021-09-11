@@ -74,3 +74,7 @@ pip install git+https://github.com/Renovamen/torchop.git --upgrade
 - Squeeze-and-Excitation (SE) Block
 
   [Squeeze-and-Excitation Networks.](https://arxiv.org/abs/1709.01507) CVPR 2018.
+
+- CBAM
+
+  [CBAM: Convolutional Block Attention Module.](https://arxiv.org/abs/1807.06521) ECCV 2018.
