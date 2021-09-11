@@ -42,6 +42,11 @@ class TestAttention(unittest.TestCase):
         out = conv(INPUT)
         check_size(out)
 
+    def test_bam(self):
+        conv = torchop.BAM(IN_CHANNELS)
+        out = conv(INPUT)
+        check_size(out)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -61,7 +61,7 @@ pip install git+https://github.com/Renovamen/torchop.git --upgrade
   [Linformer: Self-Attention with Linear Complexity.](https://arxiv.org/abs/2006.04768) arXiv 2020.
 
 
-## Convolution
+### Convolution
 
 - Selective Kernel (SK) Convolution
 
@@ -78,3 +78,7 @@ pip install git+https://github.com/Renovamen/torchop.git --upgrade
 - CBAM
 
   [CBAM: Convolutional Block Attention Module.](https://arxiv.org/abs/1807.06521) ECCV 2018.
+
+- BAM
+
+  [BAM: Bottleneck Attention Module.](https://arxiv.org/abs/1807.06514)  BMVC 2018.

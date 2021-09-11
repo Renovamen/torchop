@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from torch.nn import functional as F
 
 class SpatialAttention(nn.Module):
     def __init__(self, kernel_size: int = 7, use_bn: bool = True, use_relu: bool = False) -> None:
@@ -26,24 +25,28 @@ class SpatialAttention(nn.Module):
         """
         # channel pooling
         f_max = torch.max(x, 1)[0].unsqueeze(1)  # (batch_size, 1, height, width)
-        f_mean = torch.mean(x, 1).unsqueeze(1)  # (batch_size, 1, height, width)
-        pooled_feat = torch.cat((f_max, f_mean), dim=1)  # (batch_size, 2, height, width)
+        f_avg = torch.mean(x, 1).unsqueeze(1)  # (batch_size, 1, height, width)
+        pooled_feat = torch.cat((f_max, f_avg), dim=1)  # (batch_size, 2, height, width)
 
         out = self.conv(pooled_feat)
-        attn = self.sigmoid(out)
+        att = self.sigmoid(out)
 
-        return x * attn
+        return x * att
 
 
 class ChannelAttention(nn.Module):
     def __init__(self, in_channels: int, reduction: int = 16) -> None:
         super(ChannelAttention, self).__init__()
+        self.max_pool = nn.AdaptiveMaxPool2d(1)
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+
         out_channels = in_channels // reduction
         self.mlp = nn.Sequential(
-            nn.Linear(in_channels, out_channels),
+            nn.Conv2d(in_channels, out_channels, kernel_size=1),
             nn.ReLU(),
-            nn.Linear(out_channels, in_channels)
+            nn.Conv2d(out_channels, in_channels, kernel_size=1)
         )
+
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x: torch.Tensor):
@@ -58,20 +61,15 @@ class ChannelAttention(nn.Module):
         out : torch.Tensor (batch_size, out_channels, height, width)
             Output tensor of channel attention module.
         """
-        batch_size, _, h, w = x.shape
+        f_avg = self.avg_pool(x)  # (batch_size, in_channels, 1, 1)
+        f_avg = self.mlp(f_avg)  # (batch_size, in_channels, 1, 1)
 
-        f_mean = F.avg_pool2d(x, kernel_size=(h, w), stride=(h, w))  # (batch_size, in_channels, 1, 1)
-        f_mean = f_mean.view(batch_size, -1)  # (batch_size, in_channels)
-        f_mean = self.mlp(f_mean)  # (batch_size, in_channels)
+        f_max = self.max_pool(x)  # (batch_size, in_channels, 1, 1)
+        f_max = self.mlp(f_max)  # (batch_size, in_channels, 1, 1)
 
-        f_max = F.max_pool2d(x, kernel_size=(h, w), stride=(h, w))  # (batch_size, in_channels, 1, 1)
-        f_max = f_max.view(batch_size, -1)  # (batch_size, in_channels)
-        f_max = self.mlp(f_max)  # (batch_size, in_channels)
+        att = self.sigmoid(f_avg + f_max)  # (batch_size, in_channels, 1, 1)
 
-        attn = self.sigmoid(f_mean + f_max)  # (batch_size, in_channels)
-        attn = attn.unsqueeze(2).unsqueeze(3).expand_as(x)  # (batch_size, in_channels, h, w)
-
-        return x * attn
+        return x * att
 
 
 class CBAM(nn.Module):
